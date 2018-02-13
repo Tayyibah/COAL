@@ -1,0 +1,45 @@
+.MODEL SMALL
+.STACK 100H
+.DATA
+        A Dw 1,2,3,4,5,6,7,8,9,10
+        n Dw 10
+.CODE
+MAIN PROC
+	mov ax,@data
+	mov ds,ax
+	LEA DX,A
+	PUSH DX
+	PUSH n
+	CALL SUM_ARRAY
+
+	ADD AX,48
+	MOV DX,AX
+	MOV AH,2
+	INT 21H
+	 
+MOV AH, 4CH
+INT 21H
+MAIN ENDP
+
+SUM_ARRAY PROC
+	PUSH BP
+	MOV BP,SP
+	PUSH AX
+        PUSH n
+	
+	MOV AX,[BP+6]
+	MOV BX,[BP+4]
+	LEA SI,A
+	XOR AX,AX
+	mov cx,n
+FOR1:
+	ADD AX,[SI]
+	INC SI
+	LOOP FOR1
+	POP BP
+	POP AX
+	POP BX
+
+	RET 4
+	SUM_ARRAY ENDP 
+END MAIN

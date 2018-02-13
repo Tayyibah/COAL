@@ -1,0 +1,187 @@
+; fileHandling
+
+.MODEL SMALL
+.STACK 100H
+
+.DATA
+
+FILENAME DB "dataBase.txt",0
+BUFFER DB 100 DUP (0)
+BUFFER1 DB 10 DUP(0)
+HANDLE DW ?
+
+NAME DB 10 DUP (10)
+
+.CODE
+
+
+MAIN PROC
+	MOV AX, @DATA
+	MOV DS, AX
+	MOV ES, AX
+
+; open the already created file
+
+	MOV AH,3cH
+	LEA DX, FILENAME
+	MOV cL, 0    ; open it read and write
+	INT 21H
+	MOV HANDLE, AX
+
+; take input from user and save into BUFFER file
+
+
+	LEA DI, BUFFER
+	CLD
+
+
+	MOV AH, 2
+	MOV DL, "?"
+	INT 21H
+
+	MOV AH,1
+	WHILE1:
+
+		INT 21H
+		CMP AL, 13
+	
+		JE END_WHILE1
+		STOSB
+		JMP WHILE1
+
+
+	END_WHILE1:
+
+; writting on that file
+
+	MOV AH, 40H
+	MOV BX, HANDLE
+	MOV CX, 10       ; write 10 characters on that file
+	LEA DX, BUFFER
+	INT 21H
+
+; move the file pointer to the start of file
+
+	MOV AH, 42H
+	MOV AL, 0   
+	MOV BX, HANDLE
+	XOR CX, CX   
+	XOR DX, DX  ;
+	INT 21H
+
+;reading from file and save into BUFFER1
+
+	MOV AH, 3FH
+	MOV BX, HANDLE
+	MOV CX, 10
+	LEA DX, BUFFER1
+	INT 21H
+
+; Display from buffer
+	MOV AH, 2
+	MOV DL, 10
+	INT 21H
+	MOV DL, 13
+	INT 21H
+
+
+	MOV AH, 40H
+	MOV BX, 1
+	MOV CX, 20
+	LEA DX, BUFFER1
+	INT 21H
+
+
+; move the file pointer to the end of file
+
+	MOV AH, 42H
+	MOV AL, 2   
+	MOV BX, HANDLE
+	XOR CX, CX   
+	XOR DX, DX  ;
+	INT 21H
+
+
+; write or append data at the end of file
+
+	MOV AH, 40H
+	MOV CX, 13
+	MOV DX, OFFSET FILENAME
+	INT 21H
+
+
+; close that file
+	MOV BX,HANDLE
+	MOV AH, 3EH
+	INT 21H 
+
+read_file proc 
+PUSHA
+MOV AH, 3DH ;Open the file
+MOV AL, 0 ;Open for reading
+LEA DX, FILENAME ;DS points at filename
+INT 21H ; segment
+JC BADOPEN
+MOV HANDLE, AX ;Save file handle
+XOR SI, SI
+LP:
+MOV AH , 3FH ;Read data from the file
+LEA DX, player1_NAME  ;Address of data buffer
+MOV CX, 40 ;Read 256 bytes
+MOV BX, HANDLE ;Get file handle value
+INT 21H
+JC BADOPEN
+
+INC PLAYER1_WIN_COUNT 
+ADD SI , 40
+MOV BX , AX
+MOV CX , AX
+JCXZ EOF
+
+MOV AH , 3FH ;Read data from the file
+LEA DX, LOCATION1 ;Address of data buffer
+MOV CX, 1 ;Read 256 bytes
+MOV BX, HANDLE ;Get file handle value
+INT 21H
+;	seek:
+MOV DI , AX
+MOV AH, 42H
+MOV BX, HANDLE
+MOV AL, 0
+MOV CX, 0
+MOV DX, SI
+INT 21H
+
+CMP LOCATION1 , '0'
+JE EOF
+JMP LP ;Read next block
+
+EOF:
+MOV BX, HANDLE
+MOV AH, 3EH ;CLOSE FILE
+INT 21H
+JMP ENDOS
+
+
+BADOPEN:
+
+mov ah,02h
+mov bh,08
+mov dh,11H
+mov dl,cl
+int 10h
+
+LEA DX , ERRORS
+mov ah , 09
+int 21h
+ENDOS :
+
+POPA
+
+RET
+READ_FILE ENDP 
+	MOV AH, 4CH
+	INT 21H
+
+MAIN ENDP
+END MAIN

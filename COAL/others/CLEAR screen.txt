@@ -1,0 +1,56 @@
+.Model SMALL
+.STACK 100H
+
+.DATA
+	STRING1 DB 'MESSAGE $'
+.CODE
+MAIN PROC
+
+	MOV AX,@DATA
+	MOV DS,AX
+	MOV AX,0B800H
+	MOV ES,AX
+
+	MOV BX,23;ROW
+	MOV CX,55;COL
+	LEA DI,STRING1 ;OFFSET
+MOV SI,0
+	push bx
+	push cx
+	push si
+	MOV SI,0
+
+
+	CALL printString
+	
+MOV AH,4CH
+INT 21H
+MAIN ENDP
+
+
+printString PROC 
+	PUSH BP
+	MOV BP,SP
+	push bx
+	push cx
+	push si
+	MOV BX,[BP+4]
+	MOV CX,[BP+6]
+	MOV SI,[BP+8]
+WHILE1:
+CMP BYTE PTR[DI],'$'
+MOV AH,0A1H
+MOV ES:[SI],AX
+ADD SI,2
+INC DI
+JMP WHILE1
+
+
+	POP BP
+	POP bx
+	POP cx
+	POP si
+RET 8
+
+printString ENDP
+END MAIN

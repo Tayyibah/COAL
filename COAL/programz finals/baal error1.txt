@@ -1,0 +1,132 @@
+.model small
+.stack 100h
+; Solution program.
+; Original by Alejandro Presto - Feb 2003
+; Version 2, Gerald. Cahill
+; Version 3, Kip. Irvine (2/17/2003)
+
+
+; dl = current x
+; dh = current y
+
+; bl = next x
+; bh = next y
+
+ball = 2     	;a happy face (1) looks good too.
+drawDelay = 20 	;milliseconds between redrawing the ball
+
+; Define the wall
+wallTop = 5      	;top row number
+wallBottom = 19  	;bottom row number
+wall_X = 40      	;x position (column number)
+
+; Define the window size
+xmin = 0         	;left edge
+xmax = 79        	;right edge
+ymin = 0         	;top
+ymax = 24        	;bottom
+
+.data
+ddx BYTE 1     	;x increment per iteration
+ddy BYTE 1     	;y increment per iteration
+greeting   BYTE "DEMO program for Bouncing Ball",0dh,0ah,
+	"Close the window to end the program",0dh,0ah,0
+
+.code
+
+main PROC
+;---------- intro stuff, just for my demo
+	call Clrscr
+	mov  edx,offset greeting
+	call WriteString
+	call WaitMsg
+	call Clrscr
+
+; PROGRAM STARTS HERE
+;---------------------------------------------------------------
+ 	mov eax,white + (blue * 16)
+ 	call SetTextColor
+ 	call Clrscr
+
+;----- hides the cursor ----------------------------------------
+.data
+cursorInfo CONSOLE_CURSOR_INFO <>
+outHandle  DWORD ?
+.code
+	INVOKE GetStdHandle, STD_OUTPUT_HANDLE
+	mov  outHandle,eax
+	INVOKE GetConsoleCursorInfo, outHandle, ADDR cursorInfo
+	mov  cursorInfo.bVisible,0
+	INVOKE SetConsoleCursorInfo, outHandle, ADDR cursorInfo
+;---------------------------------------------------------------
+
+;------ Draw the Wall ----------------------------------------
+; from (40,5) -- to (40,19)
+
+	mov  dl,wall_X
+	mov  dh,wallTop
+	mov  ecx,wallBottom - wallTop + 1
+	mov  al,0DBh	; solid block character
+
+DrawWall:
+	call Gotoxy
+	call WriteChar
+	inc  dh
+	loop DrawWall
+;-------------------------------------------------------------
+
+
+	mov dl,21          ;Initial value for X ball coordinate
+	mov dh,8           ;Initial value for Y ball coordinate
+
+loop1:                     ;Infinite loop ball moving
+
+	mov bl,dl
+	add bl,ddx         ;get potential next x
+	mov bh,dh
+	add bh,ddy         ;get potential next y
+
+	.IF bl != wall_X || bh < wallTop || bh > wallBottom
+	  jmp Check_rectangle_boundaries
+	.ENDIF
+
+	; striking the top or bottom of the wall?
+	.IF bh == wallTop || bh == wallBottom
+	  neg ddy
+	  jmp redraw
+	.ELSE	; striking the middle of the wall
+	  neg ddx
+	  jmp redraw
+	.ENDIF
+
+Check_rectangle_boundaries:
+	.IF bl < xmin || bl > xmax
+	  neg ddx
+	.ENDIF
+
+	.IF bh < ymin || bh > ymax
+	  neg ddy
+	.ENDIF
+
+redraw:
+	call Gotoxy        	;erase the ball
+	mov  al,' '
+	call WriteChar
+
+	add  dl,ddx         	;get new x
+	add  dh,ddy         	;get new y
+
+	call Gotoxy        	;print the ball
+	mov  al,ball
+	call WriteChar
+
+	mov  eax,drawDelay  	;delay
+	call Delay
+
+	jmp  loop1
+
+;------------------------------------------
+
+main ENDP
+
+END main

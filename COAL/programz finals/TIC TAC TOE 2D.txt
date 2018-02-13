@@ -1,0 +1,517 @@
+.MODEL SMALL
+.STACK 100H                  
+.DATA           
+    NUMS DB '?','?','?','?','?','?','?','?','?'                                                                                      
+    MSG DB 10,13,'                                    -------------$'                                                                  
+    space1 DB '                                    $'             
+    TURN1 DB 1
+    FOUND DB 0
+    WIN_1  DB 0 
+    MSG0 DB 0Ah,0Dh,'              ---------------TIC TAC TOE GAME---------------              ',0Ah,0Dh,'$'
+    MSG1 DB 0Ah,0Dh,'              -------------THE GAME START NOW-------------              ',0Ah,0Dh,'$'
+    MSG2 DB 0Ah,0Dh,'                  PLAYER1 NAME = X AND PLAYER2 NAME = O                  ',0Ah,0Dh,'$'
+    MSG3 DB 0Ah,0Dh,'                       PLAYER ONES ENTER A POSITION                       ',0Ah,0Dh,'$'
+    MSG4 DB 0Ah,0Dh,'                       PLAYER TWOS ENTER A POSITION                       ',0Ah,0Dh,'$'
+    MSG5 DB 0Ah,0Dh,'ENTER INDEX : $'
+    MSG6 DB 0Ah,0Dh,'INVALID INPUT , TRY AGAIN$'
+    MSG7 DB 0Ah,0Dh,'PLAYER 1 WIN$'
+    MSG8 DB 0Ah,0Dh,'PLAYER 2 WINS$'     
+    MSG9 DB 0Ah,0Dh,'GAME TIE',0Ah,0Dh,'$' 
+    MSG10 DB 0Ah,0Dh,'PLAY AGAIN ? (Y/N)$'      
+                                                
+.CODE
+   MAIN PROC
+   MOV AX,@DATA
+   MOV DS,AX
+        
+    MOV AH,09
+    LEA DX,MSG0
+    INT 21H
+        
+START_GAME_:                                  
+    MOV AH,09                                                
+    LEA DX,MSG1                ; DISPLAYES GAME START   
+    INT 21H                                                  
+
+    CALL DISPLAY1 
+    MOV CX,9                     
+WHILE1:
+
+    CMP TURN1,2
+    JE  PLAYER2
+
+PLAYER1:
+        MOV AH,09
+        LEA DX,MSG3
+        INT 21H
+        JMP MSG51              
+
+PLAYER2:
+        MOV AH,09
+        LEA DX,MSG4
+        INT 21H
+MSG51:
+        MOV AH,09
+        LEA DX,MSG5
+        INT 21H
+
+        MOV AH,01                
+        INT 21H                      
+                                       
+        PUSH AX      
+
+        CALL VALIDATION_OF_INPUT_         
+
+        POP  AX                      
+
+        CMP  FOUND,0                 
+        JNE CONTINUE1
+        CALL DISPLAYING_ERROR
+        JMP MSG51
+CONTINUE1:
+
+               
+        MOV AH,0
+        PUSH AX                    
+        CALL IF_OCCUPIED            
+        POP  AX                 
+
+        CMP  FOUND,0                
+        JNE CONTINUE2
+        CALL DISPLAYING_ERROR
+        JMP MSG51
+
+CONTINUE2:
+        MOV AH,0
+        PUSH AX
+        CALL PLACE1
+        POP  AX
+
+        CALL DISPLAY1             
+
+        CALL IF_WIN                  
+        CMP  WIN_1,1                
+                JE   CHECK
+                
+        LOOP WHILE1
+
+        END_WHILE1:
+
+        MOV AH,09
+        LEA DX,MSG9
+        INT 21H
+
+CHECK:
+        CALL MSG10F
+        CMP  FOUND,0               
+        JE  END_GAME
+        
+        CALL RESET_GAME
+        JMP START_GAME_
+END_GAME:
+MOV AH,4CH
+INT 21H
+MAIN ENDP
+
+; RESET AGAIN 
+
+RESET_GAME PROC                                                
+        PUSH SI                                                
+        PUSH BX                                                
+        MOV SI,0                                               
+        MOV BX,0                                               
+                                                               
+                                                               
+                                                               
+WHILE_1:                                               
+        CMP BX,6                                      
+        JA  END_WHILE1                         
+                                                       
+WHILE_2:                                      
+        CMP SI,2                               
+        JA  END_WHILE2                         
+        MOV NUMS[BX][SI],BYTE PTR '*'          
+        INC SI                                 
+        JMP WHILE_2    
+
+END_WHILE2:                                      
+        ADD BX,3                                         
+        MOV SI,0                                         
+        JMP WHILE_1                                      
+END_WHILE1:                                            
+        MOV TURN1,1                                            
+        MOV  FOUND,0                                            
+        MOV WIN_1,0                                            
+                                                               
+        POP CX                                                 
+        POP SI                                                 
+        RET                                                    
+                                                               
+RESET_GAME ENDP     
+
+;PLAY AGAIN                             
+
+MSG10F PROC                                               
+                                                               
+        PUSH AX                                                
+        PUSH DX                                                
+                                                               
+MSG101:                                                   
+                                                               
+        MOV AH,09                                              
+        LEA DX,MSG10                                      
+        INT 21H                                                
+                                                               
+        MOV AH,01                                              
+        INT 21H                                                
+                                                               
+        CMP AL,'N'                                             
+        JE  RESET_FLAG                                         
+        CMP AL,'n'                                             
+        JE  RESET_FLAG                                         
+        CMP AL,'Y'                                             
+        JE  SET_FLAG                                           
+        CMP AL,'y'                                             
+        JE  SET_FLAG                                           
+                                                               
+        JMP MSG101                                        
+                                                                   
+SET_FLAG:                                              
+        MOV  FOUND,1                                    
+        POP DX                                         
+        POP AX                                         
+        RET                                            
+                                                               
+RESET_FLAG:                                            
+        MOV  FOUND,0                                    
+        POP DX                                         
+        POP AX                                         
+        RET                                            
+                                                               
+                                                               
+MSG10F ENDP                                               
+               
+; WIN OR NOT                                                                 
+IF_WIN PROC                                                           
+                     
+        ;CHECK WHETHER PLAYER WINS OR NOT                           
+          ;CHECKING ALL POSSIBILITIES                               
+                     
+        LEA SI,NUMS                                                
+        PUSH DX                                                    
+        MOV SI,0                                                   
+        MOV BX,0                                                   
+        CMP TURN1,1                                                
+        JE  MOV_O                                                  
+        MOV DL,'X'                                         
+        JMP SKIP_1                                         
+MOV_O:                                                     
+        MOV DL,'O'                                         
+SKIP_1:                                                            
+        CMP NUMS[BX][SI],DL                                        
+        JNE CON1_1                              
+        CMP NUMS[BX][SI+1],DL                           
+        JNE CON1_1                                       
+        CMP NUMS[BX][SI+2],DL                               
+        JNE CON1_1                              
+        CMP DL,'X'                                                 
+        JNE WIN2                                                   
+        JMP WIN1                                                   
+CON1_1:                                                       
+        CMP NUMS[BX][SI],DL                                        
+        JNE CON1_2                                                 
+        CMP NUMS[BX+3][SI],DL                   
+        JNE CON1_2                                       
+        CMP NUMS[BX+6][SI],DL                             
+        JNE CON1_2                              
+        CMP DL,'O'                                                 
+		JE WIN2                                                    
+		JMP WIN1                                                   
+                                                                   
+CON1_2:                                                       
+        CMP NUMS[BX][SI],DL                                        
+        JNE CON1_3                                                 
+        CMP NUMS[BX+3][SI+1],DL                 
+        JNE CON1_3                                       
+        CMP NUMS[BX+6][SI+2],DL                             
+        JNE CON1_3                              
+        CMP DL,'O'                                                 
+		JE WIN2                                                    
+		JMP WIN1                                                   
+ CON1_3:                                                       
+        CMP NUMS[BX][SI+1],DL                                      
+        JNE CON1_4                                                 
+        CMP NUMS[BX+3][SI+1],DL                 
+        JNE CON1_4                                       
+        CMP NUMS[BX+6][SI+1],DL                                
+        JNE CON1_4                              
+        CMP DL,'O'                                                 
+		JE WIN2                                                    
+		JMP WIN1                                                   
+                                                                   
+CON1_4:                                                        
+        CMP NUMS[BX][SI+2],DL                                      
+        JNE CON1_5                                                 
+        CMP NUMS[BX+3][SI+1],DL                 
+        JNE CON1_5                                       
+        CMP NUMS[BX+6][SI],DL                                  
+        JNE CON1_5                              
+        CMP DL,'O'                                                 
+		JE WIN2                                                    
+		JMP WIN1                                                   
+                                                                   
+CON1_5:                                                        
+        CMP NUMS[BX][SI+2],DL                                      
+        JNE CON1_6                                                 
+        CMP NUMS[BX+3][SI+2],DL                 
+        JNE CON1_6                                       
+        CMP NUMS[BX+6][SI+2],DL                             
+        JNE CON1_6                              
+        CMP DL,'O'                                                 
+		JE WIN2                                                    
+		JMP WIN1                                                   
+                                                                   
+CON1_6:                                                        
+        CMP NUMS[BX+3][SI],DL                                      
+        JNE CON1_7                                                 
+        CMP NUMS[BX+3][SI+1],DL                 
+        JNE CON1_7                                       
+        CMP NUMS[BX+3][SI+2],DL                             
+        JNE CON1_7                              
+        CMP DL,'O'                                                 
+		JE WIN2                                                    
+		JMP WIN1                                                   
+                                                                   
+CON1_7:                                                        
+        CMP NUMS[BX+6][SI],DL                                      
+        JNE CON1_8                                                 
+        CMP NUMS[BX+6][SI+1],DL                 
+        JNE CON1_8                                      
+        CMP NUMS[BX+6][SI+2],DL                             
+        JNE CON1_8                              
+        CMP DL,'O'                                                 
+		JE WIN2                                                    
+		JMP WIN1                                                   
+CON1_8:                                                        
+        MOV WIN_1,0                                                
+        POP DX                                                     
+        RET          
+
+;If PLAYER 1 WIN                                
+                                                                        
+WIN1:                                                              
+        MOV AH,09                                                  
+        LEA DX,MSG7                                         
+        INT 21H                                                    
+        POP DX                                                     
+        MOV WIN_1,1                                                
+        RET                                                        
+                     
+;If PLAYER 2 WIN                                
+                     
+WIN2:                                                              
+        MOV AH,09                                                  
+        LEA DX,MSG8                                         
+        INT 21H                                                    
+        POP DX                                                     
+                                                                   
+        MOV WIN_1,1                                                
+        RET                                                        
+                                                                      
+IF_WIN ENDP                                                           
+              
+;place X or O
+
+                                                               
+PLACE1 PROC                                                    
+                                                               
+        MOV BP,SP                                      
+        ADD BP,2                                       
+                                                               
+        PUSH SI                                        
+        PUSH BX                                        
+                                                               
+        MOV BX,0                                       
+                                                               
+        MOV SI,[BP]                                    
+        SUB SI,49                                      
+                                                               
+INDEX1:                                        
+        CMP SI,2                               
+        JNA INDEX_SET                          
+        ADD BX,3                               
+        SUB SI,3                               
+                                                               
+INDEX_SET:                                     
+	CMP TURN1,2                                    
+	JE  PLACE_O                                    
+                                                               
+        MOV NUMS[BX][SI],BYTE PTR 'X'          
+        MOV TURN1,2                            
+        POP BX                                 
+        POP SI                                 
+        RET                                    
+                                                               
+PLACE_O:                                       
+                                                               
+        MOV NUMS[BX][SI],BYTE PTR 'O'                               
+        POP BX                                 
+        POP SI                                 
+        MOV TURN1,1                            
+        RET                                    
+PLACE1 ENDP                                                   
+
+;check whether already existing or not                                    
+                                                               
+IF_OCCUPIED PROC                                               
+        PUSH BP                                                
+        MOV BP,SP                                              
+        PUSH SI                                                
+        PUSH BX                                                
+                                                               
+        MOV BX,0                                               
+                                                               
+        MOV SI,[BP+4]                                            
+        SUB SI,49                                              
+                                                               
+INDEX1:                                                
+        CMP SI,2                                       
+        JNA INDEX_SET                                  
+        ADD BX,3                                       
+        SUB SI,3                                       
+                                                               
+INDEX_SET:                                             
+                                                               
+        CMP NUMS [BX][SI] ,BYTE PTR 'X'                
+        JE FALSE2                                      
+        CMP NUMS [BX][SI] ,BYTE PTR 'O'                
+        JE FALSE2                                      
+                                                               
+        POP BX                                         
+        POP SI                                         
+        POP BP                                         
+        MOV  FOUND,1
+		JMP RETURN                                   
+FALSE2:                                                 
+        POP BX                                         
+        POP SI                                         
+        POP BP                                         
+        MOV  FOUND,0   
+RETURN:
+                RET                                             
+IF_OCCUPIED ENDP                                               
+
+;Display ERROR MESSAGE IF INVALID input
+                                                               
+DISPLAYING_ERROR PROC                                          
+        MOV AH,09                              
+        LEA DX,MSG6                   
+        INT 21H                                      
+        RET                                    
+DISPLAYING_ERROR ENDP                                            
+
+;Validate input in  RANGE OF 1-9
+                                                            
+VALIDATION_OF_INPUT_ PROC                                          
+                                                               
+        MOV BP,SP                                              
+        ADD BP,2                                               
+                                                               
+        CMP [BP],BYTE PTR '1'                                  
+        JB  FALSE1                                             
+                                                               
+        CMP [BP],BYTE PTR '9'                                  
+        JA  FALSE1                                             
+        MOV  FOUND,1                                    
+        RET                                            
+                                                               
+FALSE1:                                                
+        MOV  FOUND,0                                    
+        RET                                            
+                                                               
+VALIDATION_OF_INPUT_ ENDP                                          
+                                                              
+DISPLAY1 PROC                                                  
+                                                               
+        PUSH SI                                                
+        PUSH AX                                                
+        PUSH BX                                                
+        PUSH CX                                                
+        PUSH DX                                                
+                                                               
+        MOV SI,0                                               
+        MOV BX,0                                              
+                                                               
+                                                               
+        MOV CX,0                                               
+        MOV AH,09                                              
+        LEA DX,MSG2                                   
+        INT 21H                                                
+        LEA DX,MSG                                             
+        INT 21H                                                
+box1:                                                                                                             
+        MOV AH,02                                              
+        MOV DL,10                                              
+        INT 21H                                                
+                                                               
+        MOV AH,09                                              
+        LEA DX,space1                                            
+        INT 21H                                                
+                                                               
+        MOV AH,02                                              
+        MOV DL,'|'                                             
+        INT 21H                                                
+                                                               
+        MOV DL,' '                                             
+        INT 21H                                                
+                                                               
+        MOV DL,NUMS[BX][SI]                                    
+        INT 21H                                                
+                                                               
+        MOV DL,' '                                             
+        INT 21H                                                
+                                                               
+        MOV DL,'|'                                             
+        INT 21H                                                
+                                                               
+        MOV DL,' '                                             
+        INT 21H                                                
+                                                               
+        MOV DL,NUMS[BX][SI+1]                                  
+        INT 21H                                                
+                                                               
+        MOV DL,' '                                             
+        INT 21H                                                
+                                                               
+        MOV DL,'|'                                             
+        INT 21H                                                
+                                                               
+        MOV DL,' '                                             
+        INT 21H                                                               
+                                                               
+        MOV DL,NUMS[BX][SI+2]                                  
+        INT 21H                                                
+                                                               
+        MOV DL,' '                                             
+        INT 21H                                                
+                                                               
+        MOV DL,'|'                                             
+        INT 21H                                                
+                                                               
+        MOV AH,09                                              
+        LEA DX,MSG                                             
+        INT 21H                                                
+                                                               
+        ADD BX,3                                               
+        INC CX                                                 
+        CMP CX,3                                               
+        JNE box1                                              
+                                                               
+        POP DX                                                 
+        POP CX                                                 
+        POP BX                                                 
+        POP AX                                                 
+        POP SI                                                    
+        RET                                                  
+DISPLAY1 ENDP    
+END MAIN

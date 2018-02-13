@@ -1,0 +1,17 @@
+(      72  H     104  h 
+  9  TAB (horizontal tab)        41  )      73  I     105  i
+ 10  LF (NL line feed, new line) 42  *      74  J     106  j
+ 11  VT (vertical tab)           43  +      75  K     107  k 
+ 12  FF (NP form feed, new page) 44  ,      76  L     108  l
+ 13  CR (carriage return)        45  - 
+
+13 USHI LINE MAI CHLTA REHTA H BAR BAR
+
+Coal:
+MSG1 DB 0AH,0DH, 'ENTER A NUMBER: $'
+MSG1 DB 0AH,0DH, 'ENTER A CHARACTER: $'
+MSG1 DB 0AH,0DH, 'OUTPUT: $'
+MSG1 DB 0AH,0DH, 'NUMBER OF 1'S: $'
+MSG1 DB 0AH,0DH, 'NUMBER OF 0'S: $'
+MSG1 DB 0AH,0DH, 'NUMBER IN UPPERCASE: $'
+MSG1 DB 0AH,0DH, 'NUMBER IN LOWERCASE:  $'

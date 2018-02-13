@@ -1,0 +1,25 @@
+.Model SMALL
+.STACK 100H
+.CODE           
+MAIN PROC
+
+	MOV AX,0B800H
+	MOV ES,AX
+	xor si,si
+WHILE1:
+	                             
+	MOV Word ptr ES:[sI],7920h
+	add si,2
+	cmp si,1280
+	Jne WHILE2
+WHILE2:                                         
+	MOV Word ptr ES:[sI],7920h
+	add si,2
+	cmp si,2720
+	Jne WHILE2
+WHILE3:                                         
+	MOV Word ptr ES:[sI],1720h
+	add si,2
+	cmp si,4000
+	Jne WHILE3
+

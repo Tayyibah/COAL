@@ -1,0 +1,128 @@
+.MODEL SMALL
+.STACK 100H
+video equ 0b800h
+
+.data
+save_di dw ?
+incr dw 1
+.code
+.386
+start proc near
+	mov ax, @data
+	mov ds, ax
+	mov ax, video
+	mov es, ax
+	mov ax, 4
+	int 10h         ;sets at medium resolution
+        mov ah, 0ch
+	int 21h
+	
+	xor si, si
+	xor dx, dx
+
+
+call paint_back
+mov di, 4    ;to begin the figure at the first even line
+
+redraw:	
+	mov save_di,di
+	mov al,055h
+
+	call drawball
+        
+	mov ah,11h;;;check for kbd input
+	int 16h
+	
+	jnz dosret
+	
+
+	call mypause
+	mov al,0aah
+	call drawball;;;erase just the ball with background color
+	;call paint_back;;;not the whose screen
+	mov di,save_di
+
+	;inc di
+	add di,incr
+	cmp di,76
+	jg negline
+	cmp di,4
+	jg redraw
+negline:	neg incr
+
+
+	jmp redraw
+
+done:
+	mov ah,1
+	int 21h
+dosRet:
+	
+	mov ax, 2
+	int 10h
+	mov ax, 4c00h
+	int 21h
+	
+start endp
+
+mypause proc
+
+	push cx
+	mov cx,32767
+bup:     pusha
+	popa
+	loop bup
+	pop cx
+	ret
+mypause endp
+
+paint_back proc
+	xor di, di     ;start di at first even line
+	mov cx,1f40h   
+	mov al, 0aah
+	rep stosb
+	mov di, 2000h
+	mov cx,1f40h
+	rep stosb
+	
+ret
+paint_back endp
+
+drawball proc
+
+	mov di,save_di          ;restore the starting position
+	        
+	mov cx, 1
+	rep stosb       ;second even line
+	add di, 78
+	mov cx, 3
+	rep stosb
+	add di, 76   ;third even line
+	mov cx, 5
+	rep stosb
+	add di, 76
+	mov cx, 3
+	rep stosb
+	add di, 78
+	mov cx, 1
+	rep stosb
+
+	mov di,save_di
+	add di, 2000h  ;first odd line
+	mov cx, 1
+	rep stosb
+	add di, 78 ;second odd line
+	mov cx, 3
+	rep stosb
+	add di, 76   ;third odd line
+	mov cx, 5
+	rep stosb
+	add di, 76
+	mov cx, 3
+	rep stosb
+	add di, 78
+	mov cx, 1
+	rep stosb
+	ret
+	drawball endp
+end start

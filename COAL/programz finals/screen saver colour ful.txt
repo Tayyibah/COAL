@@ -1,0 +1,38 @@
+
+.model small
+.stack 100h
+.code
+main proc
+mov ax, 19
+int 10h ; 320x200 with 256 colors
+mov ax, 0a000h
+mov es, ax ;set the di segment to the graphics memory
+xor bl, bl ;bl will be used to store the number of the picture
+new:
+inc bl
+hlt ;here the processor will wait (very shortly and in an unregular period)
+xor cx, cx
+xor dx, dx ;cx and dx represent the coordinates
+xor di, di ;set di to offset of the begin of the screen.
+a:
+mov al, cl
+xor al, dl
+add al, dl
+add al, bl ;create a color
+stosb ;write pixel
+inc cx
+cmp cx, 320 ;refresh coordinates
+jne a
+xor cx, cx
+inc dx
+cmp dx, 200
+jne a
+mov ah, 1 ;check whether a key had been pressed
+int 16h
+jz new ;If no key had been pressed, show next picture
+mov ax, 3
+int 10h
+mov ax, 4c00h
+int 21h
+main endp
+end main

@@ -1,0 +1,50 @@
+.Model SMALL
+.STACK 100H
+.CODE
+
+MAIN PROC
+
+	MOV AX,0B800H
+	MOV ES,AX
+
+	MOV AL,'*'
+	MOV AH,07
+	MOV ES:[SI],AX
+
+
+	MOV DS,AX
+	MOV BX,0
+	mov di,158
+	mov si,0
+	MOV AH,2
+	mov dx,0
+	
+WHILE1:
+	cmp si,158
+	JE END1    
+	cmp di,0
+	JE END1         
+	MOV AL,'*'
+	MOV AH,07
+	MOV ES:[SI],AX 
+	MOV ES:[dI],AX
+	MOV CX,65535
+	FOR_:
+		LOOP FOR_
+	MOV DL,' '
+	mov dh,07  
+	MOV ES:[SI],dX
+	MOV ES:[dI],dX
+	MOV CX,65535
+	FOR1:
+		LOOP FOR1
+ADD SI,2
+SUB DI,2
+	JMP WHILE1
+
+END1:
+MOV AH,4CH
+INT 21H
+MAIN ENDP
+
+END MAIN

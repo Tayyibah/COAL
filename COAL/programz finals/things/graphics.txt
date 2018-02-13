@@ -1,0 +1,18 @@
+
+graphic proc
+	mov ah,0
+	mov al,04h ;CGA
+int 10h
+mov ah,0Bh
+mov bh,00h
+mov bl,6 ;Color
+int 10h
+mov ah,02
+mov bh,0
+mov dh,0
+	mov dl,39
+	int 10h
+	mov ah,9
+ret 
+	graphic endp
+

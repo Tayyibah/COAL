@@ -1,0 +1,23 @@
+.Model SMALL
+.STACK 100H
+.CODE
+
+MAIN PROC
+
+	MOV AX,0B800H
+	MOV ES,AX
+	MOV di,0
+	
+WHILE1:                                         
+	MOV Word ptr ES:[dI],0720h
+	add di,2
+	cmp di,4000
+	Jne WHILE1
+
+END1:
+MOV AH,4CH
+INT 21H
+MAIN ENDP
+
+END MAIN
+     

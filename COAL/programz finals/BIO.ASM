@@ -1,0 +1,60 @@
+.MODEL SMALL
+.STACK 100H
+.DATA
+	MSG1 DB 0AH,0DH,'TYPE A BINARY NUMBER , UP TO 8 DIGITS :','$'
+	MSG2 DB 0AH,0DH,'THE TYPED BINARY NUMBER IS , $'
+.386
+.CODE
+MAIN PROC
+	MOV AX,@DATA ;initialize DS
+	MOV DS,AX
+
+	CALL READ
+	CALL SHOW
+
+
+MOV AH,4CH ;return to DOS
+INT 21H
+MAIN ENDP
+
+READ PROC ;for reading biunary number
+		
+	MOV AH,9 ;prompt user for 1ST number
+	LEA DX,MSG1
+	INT 21H
+	
+	XOR Bl,Bl
+	MOV CL,8
+	MOV AH,1
+FOR1:	int 21h 
+
+	AND AL,0FH
+	SHL BL,1
+	OR BL,AL
+	;INT 21H
+	LOOP FOR1
+	RET
+	READ ENDP
+;------------------------------------
+SHOW PROC ;to display BINARY NUMBER
+	
+	MOV AH,9 ;prompt user for 2nd number
+	LEA DX,MSG2
+	INT 21H
+	MOV CX,8
+	MOV AH,2
+FOR2:
+	ROL BL,1
+	JC ONE
+	MOV DL,'0'
+	INT 21H
+	JMP continue
+ONE:
+	MOV DL,'1'
+	INT 21H
+continue:
+	LOOP FOR2
+
+	RET
+	SHOW ENDP
+END MAIN

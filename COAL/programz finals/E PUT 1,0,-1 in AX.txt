@@ -1,0 +1,35 @@
+.MODEL SMALL
+.STACK 100H
+.CODE
+.DATA
+	A1 DB '1 $'
+	B1 DB '0 $'
+	C1 DB '-1 $'
+.CODE
+MAIN PROC    
+	MOV AH,1
+INT 21H
+
+	CMP AX,0
+	JE displayZero
+	JG displayPos
+	JL displayNeg
+displayZero:
+	MOV AH,9
+	LEA DX,B1
+	INT 21H
+	JMP END1_
+displayPos:
+	MOV AH,9
+	LEA DX,A1
+	INT 21H
+	JMP END1_
+displayNeg:
+	MOV AH,9
+	LEA DX,C1
+	INT 21H
+END1_:
+MOV AH , 4CH
+INT 21H
+MAIN ENDP
+	END MAIN

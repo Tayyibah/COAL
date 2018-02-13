@@ -1,0 +1,156 @@
+.model small
+.stack 100h
+;title Bouncing Ball									;	(bounce.asm)
+; Dani Horowitz
+; CSC111 x86 Assembly Programming
+; This program displays a bouncing ball on the scree
+;--------------------------------------------------
+.stack			; begin stack segment
+;--------------------------------------------------
+.data			; begin data segment
+	ball			byte	'O'			; ball character
+	row				byte	10			; starting vertical location of ball
+	column			byte	30			; starting horizontal location of ball
+	xvector			byte	1			; direction of X vector (1=right, 0=left)
+	yvector			byte	1			; direction of Y vector (1=down, 0=up)
+;--------------------------------------------------
+.code			; begin code segment
+;--------------------------------------------------
+;--------------------------------------------------
+flipx PROC
+;
+; Flips X vector if necessary
+;--------------------------------------------------
+	cmp		column, 70		; did we reach right boundary?
+	jge		FlipLeft		; if yes then goto FlipLeft
+	cmp		column, 0		; did we reach left boundary?
+	jle		FlipRight		; if yes then goto FlipRight
+	jmp		Done
+FlipLeft:					; set X vector left
+	mov		xvector,-1
+	jmp		Done
+	
+FlipRight:					; set X vector right
+	mov		xvector,1
+	
+Done:
+	ret
+;--------------------------------------------------
+flipx ENDP
+;--------------------------------------------------
+;--------------------------------------------------
+;--------------------------------------------------
+flipy PROC
+;
+; Flips Y vector if necessary
+;--------------------------------------------------
+	cmp		row, 30			; did we reach bottom boundary?
+	jge		FlipUp			; if yes then goto FlipUp
+	cmp		row, 0			; did we reach top boundary?
+	jle		FlipDown		; if yes then goto FlipDown
+	jmp		Done
+FlipUp:						; set Y vector up
+	mov		yvector,-1
+	jmp		Done
+	
+FlipDown:					; set Y vector down
+	mov		yvector,1
+	
+Done:
+	ret
+;--------------------------------------------------
+flipy ENDP
+;--------------------------------------------------
+;--------------------------------------------------
+eraseball PROC
+;
+; Positions the cursor at the correct screen coordinates
+; and then draws an empty string
+;--------------------------------------------------
+	mov		dh, row
+	mov		dl, column
+	call	Gotoxy			; goto row,column coordinates
+	mov		al, ' '
+	call	WriteChar		; print empty string
+	ret
+;--------------------------------------------------
+eraseball ENDP
+;--------------------------------------------------
+;--------------------------------------------------
+drawball PROC
+;
+; Positions the cursor at the correct screen coordinates
+; and then draws a ball
+;--------------------------------------------------
+	mov		dh, row
+	mov		dl, column
+	call	Gotoxy			; goto row,column coordinates
+	mov		al, ball
+	call	WriteChar		; print ball to screen
+	ret
+;--------------------------------------------------
+drawball ENDP
+;--------------------------------------------------
+;--------------------------------------------------
+moveball PROC
+;
+; Determines new coordinates for ball
+; Updates row and column values
+;--------------------------------------------------
+TestHorizontal:
+	call	flipx			; flip xvector if necessary
+	cmp		xvector,1		; is xvector set to right?
+	je		GoRight			; if yes goto GoRight
+	jmp		GoLeft			; goto GoLeft
+	
+TestVertical:
+	call	flipy			; flip y vector if necessary
+	cmp		yvector,1		; is yvector set to down?
+	je		GoDown			; if yes goto GoDown
+	jmp		GoUp			; goto GoUp
+	
+GoRight:
+	inc		column			; move right
+	jmp		TestVertical	; prepare to move up or down
+GoLeft:
+	dec		column			; move left
+	jmp		TestVertical	; prepare to move up or down
+GoDown:	
+	inc		row				; move down
+	jmp		Done
+GoUp:
+	dec		row				; move up
+Done:
+	
+	ret
+;--------------------------------------------------
+moveball ENDP
+;--------------------------------------------------
+;--------------------------------------------------
+take5 PROC
+;
+; Take a break! Pauses screen
+;--------------------------------------------------
+	mov		eax,100
+	call	Delay
+	ret
+;--------------------------------------------------
+take5 ENDP
+;--------------------------------------------------
+;--------------------------------------------------
+main proc
+;--------------------------------------------------
+	call	Clrscr			; clear screen
+BounceBall:
+	call	drawball		; draw ball to the screen
+	call	take5			; pause
+	call	eraseball		; erase ball from current location
+	call	moveball		; determine new coordinates for ball
+	jmp		BounceBall		; loop
+	
+EndBounce:
+	exit
+	
+main  endp
+end main
+;------------

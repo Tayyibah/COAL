@@ -1,0 +1,38 @@
+.MODEL SMALL
+.STACK 100H
+.CODE
+.DATA
+	A1 DB 'ENTER NUM: $'
+.CODE
+MAIN PROC                          
+	MOV AX,@DATA
+	MOV DS,AX
+	MOV AH,9
+	LEA DX,A1
+	INT 21H
+
+	MOV AH,1
+INT 21H
+	CMP AX,1
+	JE displayO
+	CMP AX,3
+	JE displayO
+	CMP AX,'2'
+	JE displayE
+	CMP AX,4
+	JE displayE
+	JMP END1_
+displayO:
+	MOV AH,2
+	MOV DX,'O'
+	INT 21H
+	JMP END1_
+displayE:
+	MOV AH,2
+	MOV DX,'E'
+	INT 21H
+END1_:
+MOV AH , 4CH
+INT 21H
+MAIN ENDP
+	END MAIN

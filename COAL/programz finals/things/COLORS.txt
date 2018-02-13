@@ -1,0 +1,9 @@
+print12 PROC
+       ;printing the line
+       mov bl,2  ;color attribute
+       mov ah, 9 
+       mov al,0  ;avoding extra characters
+       int 10h   ;printing colors
+       int 21h
+ret    
+print12 ENDP

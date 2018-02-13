@@ -1,0 +1,322 @@
+.MODEL SMALL
+.STACK 100H
+.DATA
+
+A1 Db 1,2,3,4,5
+
+
+.CODE
+
+main proc
+mov ax, @data
+mov ds, ax
+
+
+       LEA DX, A1
+       MOV BX, 0
+       MOV CX, 4
+       MOV AX, 7
+
+
+
+       PUSH DX  ; offset
+       PUSH BX  ; start
+       PUSH CX  ; count
+       PUSH AX  ; key
+       CALL BINARYSEARCH
+
+
+       MOV DX, AX
+       MOV AH, 2
+       INT 21H
+
+       mov ah, 4ch
+       int 21h
+
+MAIN ENDP
+ BINARYSEARCH PROC
+       PUSH BP
+       MOV BP, SP
+       SUB SP, 2;   make a local variable to store mid value
+       PUSH BX
+       PUSH CX
+
+       PUSH DX
+       PUSH SI
+       PUSH DI
+
+       MOV BX, [BP+10]  ; offset
+       MOV SI, [BP+8]  ; start
+       MOV DI, [BP+6] ; end
+       MOV CX, [BP+4] ; key
+
+      WHILE1:
+                CMP DI, SI
+                JB END_WHILE1
+
+                        MOV DX, SI
+                        ADD DX, DI
+                        SHR DX, 1 	; mid value
+                        MOV [BP-2], DX 	; store the mid value
+
+                        
+                        ADD DX,[BP+10]  ; offset
+                        MOV BX, DX
+
+                        CMP [BX], CL
+                        JNE ELSE1
+                        MOV AX, '1'
+                        JMP RET1
+
+                        ELSE1:
+                        CMP CL,[BX]
+                        JB ELSE2
+                        MOV SI, [BP-2]
+                        INC SI
+                        JMP END_IF1
+
+                        ELSE2:
+                        MOV DI, [BP-2]
+                        DEC DI
+                        
+                   END_IF1:
+                        JMP WHILE1
+
+
+              END_WHILE1:
+              MOV AX, '0'
+              RET1:
+
+
+
+
+       POP DI
+       POP SI
+       POP DX
+       POP CX
+       POP BX
+       ADD SP, 2
+       POP BP
+
+
+
+ RET 10
+ BINARYSEARCH ENDP
+
+
+
+
+
+
+REVERSE PROC      ; A + (N-1)*2
+PUSH BP
+MOV BP, SP
+
+    MOV SI, [BP+4]
+
+    MOV CX, [BP+6]
+    MOV DI, CX
+    DEC DI
+    SHL DI, 1
+    ADD DI, SI
+
+    SHR CX, 1
+
+    FOR3:
+        MOV AX, [SI]
+        XCHG AX,[DI]
+        MOV [SI], AX
+        ADD SI, 2
+        SUB DI, 2
+        LOOP FOR3
+POP BP
+RET 4
+REVERSE ENDP
+
+
+ ; this function return a number in bx
+INPUT PROC
+   PUSH AX
+   PUSH CX
+
+   XOR BX, BX
+
+   MOV AH, 1
+   INT 21H
+   CMP AL, '-'
+   JE NEG1
+   MOV CX, 0
+   JMP NEXT1
+
+   NEG1:
+   MOV CX, 1
+
+   NEXT1:
+   MOV AH,1
+   INT 21H
+
+ WHILE1:
+   CMP AL, 13
+   JE END_WHILE1
+   AND AX, 000FH   ; convert to actual binary value
+   PUSH AX    
+   
+   MOV AX, 10     ; collection: 
+   IMUL BX  ; AX = AX * BX  ; generate room
+   JC OV
+   POP BX
+   ADD BX, AX              ; collect digit
+   JC OV
+   MOV AH, 1
+   INT 21H
+   JMP NEXT3
+   OV:
+   MOV AH, 9
+   LEA DX, a1
+   INT 21H
+   MOV BX, 0
+   JMP EXIT2
+   NEXT3:
+   JMP WHILE1
+
+END_WHILE1:
+
+
+   CMP CX, 1
+   JNE EXIT2
+   NEG BX
+EXIT2:
+
+   POP CX
+   POP AX
+RET 
+INPUT ENDP
+
+
+
+PRINT PROC
+
+     PUSH BP
+     MOV BP, SP
+     CMP WORD PTR [BP+4], 0
+     JGE POS
+
+     MOV AH, 2
+     MOV DL, '-'
+     INT 21H
+     NEG WORD PTR [BP+4]
+
+POS:
+     MOV AX, [BP+4]
+     MOV BX, 10
+     XOR CX, CX
+
+DO_WHILE1:
+     XOR DX, DX
+     DIV BX
+     PUSH DX
+     INC CX
+     CMP AX, 0
+     JNE DO_WHILE1
+
+     MOV AH, 2
+     FOR1:
+        POP DX
+
+        ADD DX, 48
+        INT 21H
+     LOOP FOR1
+
+     POP BP
+RET 2
+PRINT ENDP
+
+
+
+FACTORIAL PROC
+        PUSH BP
+        MOV BP, SP
+
+        PUSH BX
+
+        CMP WORD PTR [BP+4], 0
+        JE EXIT1
+        CMP WORD PTR [BP+4],1
+        JE EXIT1
+
+        MOV BX, [BP+4]
+        DEC BX
+        PUSH BX
+        CALL FACTORIAL
+        MUL WORD PTR [BP+4]
+        JMP EXIT2
+
+   EXIT1:
+        MOV AX, 1
+   EXIT2:
+        POP BX
+        POP BP
+
+        RET 2
+FACTORIAL ENDP
+
+        PRINTF PROC
+             PUSH BP
+             MOV BP, SP
+
+             PUSH AX
+             PUSH BX
+             PUSH CX
+             PUSH DX
+
+            
+             CMP WORD PTR [BP+4], 0
+             JNL NEXT3
+
+             MOV DL, '-'
+             MOV AH, 2
+             INT 21H
+             NEG WORD PTR [BP+4]
+
+             NEXT3:
+             MOV AX, [BP+4]
+
+
+             MOV BX, 10
+             XOR CX, CX
+
+          DO_WHILE1:
+             XOR DX,DX
+             DIV BX
+
+
+             ADD DX, 48
+             PUSH DX
+             INC CX
+
+             CMP AX, 0
+             JNZ DO_WHILE1
+
+             MOV AH, 2
+
+             FOR1:
+                POP DX
+                INT 21H
+                LOOP FOR1
+
+
+                    POP DX
+                    POP CX
+                    POP BX
+                    POP AX
+                    POP BP
+
+
+        RET 2
+        PRINTF ENDP
+
+
+
+
+
+END MAIN

@@ -1,0 +1,19 @@
+
+
+
+There are some special combinations of segment registers and general registers that point to important addresses:
+CS:IP (CS is Code Segment, IP is Instruction Pointer) points to the address where the processor will fetch the next byte of code.
+SS:SP (SS is Stack Segment, SP is Stack Pointer) points to the address of the top of the stack, i.e. the most recently pushed byte.
+DS:SI (DS is Data Segment, SI is Source Index) is often used to point to string data that is about to be copied to ES:DI.
+ES:DI (ES is Extra Segment, DI is Destination Index) is typically used to point to the destination for a string copy, as mentioned above.
+
+Index Registers
+
+The 32-bit index registers, ESI and EDI, and their 16-bit rightmost portions. SI and DI, are used for indexed addressing and sometimes used in addition and subtraction. There are two sets of index pointers -
+
+Source Index (SI) - It is used as source index for string operations.
+
+
+Destination Index (DI) - It is used as destination index for string operations.
+
+

@@ -1,0 +1,704 @@
+.model small
+.stack 100h
+
+
+
+.data
+ substart dw ?
+ boatstart dw ?
+ bulletstart dw ?
+ boat_Right dw 1
+ sub_Right dw 1
+ isBullet dw 0
+ 
+ .386
+ pause macro count
+   
+ endm
+ 
+
+.code
+ start proc
+ mov ax, @data
+ mov ds, ax
+ mov ax, 0b800h
+ mov es, ax
+ 
+ ;set to medium resolution
+ mov ax, 4
+ int 10h
+ 
+ mov ah, 0ch
+ int 21h
+
+ 
+ background:
+
+ mov di, 07D0h
+ mov cx, 6000
+ mov al, 01010101b
+ rep stosb
+ 
+ mov di, 27D0h
+ mov cx, 6000
+ rep stosb
+ 
+ mov substart, 1C20h 
+  mov di, substart
+  call draw_sub
+ 
+  mov boatstart, 0640h
+  mov di, boatstart
+  call draw_boat
+ 
+  
+Boat:
+  cmp isBullet, 1
+  je Bullet
+  jmp skipBullet
+
+Bullet:
+  push cx
+  mov cx, 3
+  loopBullet:
+  call moveBullet       
+      push ebx
+            xor ebx, ebx
+          @@50:
+            inc ebx
+            pusha
+            popa
+            cmp ebx, 150000
+            je @@60
+            jmp @@50
+          @@60:
+ pop ebx
+ loop loopBullet
+ pop cx
+ 
+skipBullet:
+  call Move_Boat
+  
+ push ebx
+       xor ebx, ebx
+     @@10:
+       inc ebx
+       pusha
+       popa
+       cmp ebx, 450000
+       je @@20
+       jmp @@10
+     @@20:
+ pop ebx
+ 
+ call Move_Boat
+      
+  push ebx
+        xor ebx, ebx
+      @@11:
+        inc ebx
+        pusha
+        popa
+        cmp ebx, 450000
+        je @@22
+        jmp @@11
+      @@22:
+ pop ebx
+   mov ah, 1
+    int 16h
+    jz subRight
+    xor ah, ah
+    int 16h
+    cmp al, 27
+    je exit
+    cmp al, 's'
+    je shoot
+   
+  shoot:
+    call getBullet
+    call draw_Bullet
+    jmp Boat
+  subRight:
+    call Move_sub
+        push ebx
+               xor ebx, ebx
+             @@30:
+               inc ebx
+               pusha
+               popa
+               cmp ebx, 650000
+               je @@40
+               jmp @@30
+             @@40:
+     	   pop ebx
+ 	 jmp Boat
+   
+  
+  
+ 
+    
+exit:
+  mov ah, 1
+  int 21h
+  dosRet:
+  mov ax, 2
+  int 10h
+  mov ax, 4c00h
+  int 21h
+start endp
+ 
+ draw_boat proc
+ ;draw even lines (bottom)
+ 
+ 
+ push di
+ mov al, 11111111b
+ mov cx, 14
+ rep stosb
+ 
+ add di, 67
+ mov cx, 12
+ rep stosb
+ 
+ add di, 69
+ mov cx, 10
+ rep stosb
+ 
+ add di, 71
+ mov cx, 8
+ rep stosb
+ 
+ add di, 73
+ mov cx, 6
+ rep stosb
+ 
+ pop di
+ push di
+ ;draw even lines top
+ 
+ sub di, 76
+ mov cx, 1
+ rep stosb
+ 
+ sub di, 81
+ mov cx, 1
+ rep stosb
+ 
+ ;draw even lines-sail
+ 
+ sub di, 81
+ mov cx, 5
+ rep stosb
+ 
+ sub di, 85
+ mov cx, 4
+ rep stosb
+ 
+ sub di, 84
+ mov cx, 3
+ rep stosb
+ 
+ sub di, 83
+ mov cx, 2
+ rep stosb
+ 
+ sub di, 82
+ mov cx, 1
+ rep stosb
+ 
+ ;draw odd lines (bottom)
+ 
+ mov al, 00001111b
+ pop di
+ add di, 2000h
+ push di
+ mov cx, 1
+ rep stosb
+ 
+ mov al, 11111111b
+ mov cx, 12
+ rep stosb
+ 
+ mov al, 11110000b
+ mov cx, 1
+ rep stosb
+ 
+ add di, 67
+ mov al, 00001111b
+ mov cx, 1
+ rep stosb
+ 
+ mov al, 11111111b
+ mov cx, 10
+ rep stosb
+ 
+ mov al, 11110000b
+ mov cx, 1
+ rep stosb
+ 
+ add di, 69
+ mov al, 00001111b
+ mov cx, 1
+ rep stosb
+ 
+ mov al, 11111111b
+ mov cx, 8
+ rep stosb
+ 
+ mov al, 11110000b
+ mov cx, 1
+ rep stosb
+ 
+ add di, 71
+ mov al, 00001111b
+ mov cx, 1
+ rep stosb
+ 
+ mov al, 11111111b
+ mov cx, 6
+ rep stosb
+ 
+ mov al, 11110000b
+ mov cx, 1
+ rep stosb
+ 
+ ;draw odd lines (top)
+ mov al, 11111111b
+ pop di
+ add di, 0004h
+ mov cx, 1
+ rep stosb
+ 
+ sub di, 81
+ mov cx, 1
+ rep stosb
+ 
+ sub di, 81
+ mov cx, 1
+ rep stosb
+  
+ sub di, 81
+ mov cx, 1
+ rep stosb
+ 
+ ;draw odd lines-sail
+ sub di, 81
+ mov cx, 4
+ rep stosb
+ 
+ mov al, 11110000b
+ mov cx, 1
+ rep stosb
+ 
+ mov al, 11111111b
+ sub di, 85
+ mov cx, 3
+ rep stosb
+ 
+ mov al, 11110000b
+ mov cx, 1
+ rep stosb
+ 
+ mov al, 11111111b
+ sub di, 84
+ mov cx, 2
+ rep stosb
+  
+ mov al, 11110000b
+ mov cx, 1
+ rep stosb
+ 
+ mov al, 11111111b
+ sub di, 83
+ mov cx, 1
+ rep stosb
+  
+ mov al, 11110000b
+ mov cx, 1
+ rep stosb
+ 
+ sub di, 82
+ mov cx, 1
+ rep stosb
+ret
+draw_boat endp
+
+draw_sub proc
+push di
+mov al, 11111111b
+mov cx, 3
+rep stosb
+
+mov al, 00000000b
+mov cx, 2
+rep stosb
+
+mov al, 11111111b
+mov cx, 2
+rep stosb
+
+mov al, 00000000b
+mov cx, 2
+rep stosb
+
+mov al, 11111111b
+mov cx, 2
+rep stosb
+
+mov al, 00000000b
+mov cx, 2
+rep stosb
+
+mov al, 11111111b
+mov cx, 3
+rep stosb
+;---------------------------
+add di, 64
+mov al, 11111111b
+mov cx, 16
+rep stosb
+;---------------------------
+add di, 64
+mov al, 01011111b
+mov cx, 1
+rep stosb
+ 
+mov al, 11111111b
+mov cx, 14
+rep stosb
+
+mov al, 11110101b
+mov cx, 1
+rep stosb
+;--------------------------
+add di, 65
+mov al, 11111111b
+mov cx, 14
+rep stosb
+;--------------------------
+
+pop di
+push di
+sub di, 80
+mov al, 01011111b
+mov cx, 1
+rep stosb
+ 
+mov al, 11111111b
+mov cx, 14
+rep stosb
+
+mov al, 11110101b
+mov cx, 1
+rep stosb
+;--------------------------
+sub di, 95
+mov al, 11111111b
+mov cx, 14
+rep stosb
+;--------------------------
+
+sub di, 84
+mov cx, 1
+rep stosb
+sub di, 81
+mov cx, 1
+rep stosb
+;--------------------------
+sub di, 81
+mov cx, 2
+rep stosb
+sub di, 82
+mov cx, 2
+rep stosb
+;--------------------------
+;draw odd lines of submarine
+pop di
+add di, 2000h
+push di
+mov cx, 3
+rep stosb
+mov al, 00000000b
+mov cx, 2
+rep stosb
+mov al, 11111111b
+mov cx, 2
+rep stosb
+mov al, 00000000b
+mov cx, 2
+rep stosb
+mov al, 11111111b
+mov cx, 2
+rep stosb
+mov al, 00000000b
+mov cx, 2
+rep stosb
+mov al, 11111111b
+mov cx, 3
+rep stosb
+;------------------------
+add di, 64
+mov al, 01111111b
+mov cx, 1
+rep stosb
+mov al, 11111111b
+mov cx, 14
+rep stosb
+mov al, 11111101b
+mov cx, 1
+rep stosb
+;------------------------
+add di, 64
+mov al, 01010111b
+mov cx, 1
+rep stosb
+mov al, 11111111b
+mov cx, 14
+rep stosb
+mov al, 11010101b
+mov cx, 1
+rep stosb
+;-------------------------
+add di, 65
+mov al, 01111111b
+mov cx, 1
+rep stosb
+mov al, 11111111b
+mov cx, 12
+rep stosb
+mov al, 11111101b
+mov cx, 1
+rep stosb
+;------------------------
+
+pop di
+sub di, 80
+mov al, 01111111b
+mov cx, 1
+rep stosb
+mov al, 11111111b
+mov cx, 14
+rep stosb
+mov al, 11111101b
+mov cx, 1
+rep stosb
+;------------------------
+sub di, 96
+mov al, 01010111b
+mov cx, 1
+rep stosb
+mov al, 11111111b
+mov cx, 14
+rep stosb
+mov al, 11010101b
+mov cx, 1
+rep stosb
+;-------------------------
+sub di, 95
+mov al, 01111111b
+mov cx, 1
+rep stosb
+mov al, 11111111b
+mov cx, 12
+rep stosb
+mov al, 11111101b
+mov cx, 1
+rep stosb
+;------------------------
+
+sub di, 84
+mov al, 11111111b
+mov cx, 1
+rep stosb
+;-------------------------
+sub di, 81
+mov cx, 2
+rep stosb
+sub di, 82
+mov cx, 2
+rep stosb
+;-------------------------
+ret
+draw_sub endp
+
+erase_boat proc
+ sub di, 0280h
+ push di
+ mov al, 00000000b
+ mov cx, 13
+erase_even:
+ push cx
+ mov cx, 16
+ rep stosb
+ add di, 64
+ pop cx
+ loop erase_even
+
+ pop di
+ add di, 2000h
+ mov cx, 13
+erase_odd:
+ push cx
+ mov cx, 16
+ rep stosb
+ add di, 64
+ pop cx
+ loop erase_odd
+ret
+erase_boat endp
+
+Move_Boat proc
+ cmp boat_right, 1
+ je MoveBoat_Right
+ jmp MoveBoat_Left
+ 
+ MoveBoat_Right:
+  mov di, boatstart
+  call erase_boat
+  add boatstart, 0001h
+  mov di, boatstart
+  call draw_boat
+  cmp boatstart, 067Ch
+  ja changeLeft
+  jmp return
+changeLeft:
+  mov boat_right, 0
+  jmp return
+ MoveBoat_Left:
+  mov di, boatstart
+    call erase_boat
+    sub boatstart, 0001h
+    mov di, boatstart
+    call draw_boat
+    cmp boatstart, 0640h
+    jle changeRight
+    jmp return
+changeRight:
+    mov boat_right, 1
+    jmp return
+return:
+    ret
+move_boat endp
+ 
+ 
+erase_sub proc
+ sub di, 0280h
+ push di
+ mov al, 01010101b
+ mov cx, 13
+erasesub_even:
+ push cx
+ mov cx, 16
+ rep stosb
+ add di, 64
+ pop cx
+ loop erasesub_even
+
+ pop di
+ add di, 2000h
+ mov cx, 13
+erasesub_odd:
+ push cx
+ mov cx, 16
+ rep stosb
+ add di, 64
+ pop cx
+ loop erasesub_odd
+ret
+erase_sub endp
+
+Move_sub proc
+ cmp sub_right, 1
+ je Movesub_Right
+ jmp Movesub_Left
+ 
+ Movesub_Right:
+  mov di, substart
+  call erase_sub
+  add substart, 0001h
+  mov di, substart
+  call draw_sub
+  cmp substart, 1C5Ch
+  ja goLeft
+  jmp returnMain
+goLeft:
+  mov sub_right, 0
+  jmp returnMain
+ Movesub_Left:
+  mov di, substart
+    call erase_sub
+    sub substart, 0001h
+    mov di, substart
+    call draw_sub
+    cmp substart, 1C20h
+    jle goRight
+    jmp returnMain
+goRight:
+    mov sub_right, 1
+    jmp returnMain
+returnMain:
+    ret
+move_sub endp
+
+getBullet proc
+  push di
+  mov di, substart
+  sub di, 01D5h
+  mov bulletstart, di
+  pop di 
+ ret
+ getBullet endp
+ 
+ draw_Bullet proc
+  pusha
+  mov isBullet, 1
+  mov al, 10101010b
+  mov di, bulletstart
+  mov cx, 2
+  rep stosb
+  sub di, 82
+  mov cx, 2
+  rep stosb
+  add di, 1FFEh
+  mov cx, 2
+  rep stosb
+  popa
+ ret
+ draw_bullet endp
+ 
+ moveBullet proc
+   pusha
+   mov di, bulletstart
+   call erase_bullet
+   sub bulletstart, 80
+   mov di, bulletstart
+   call draw_Bullet
+   cmp bulletstart, 0640h
+   jle noBullet
+   jmp BackToMain
+  noBullet:
+    call erase_bullet
+    mov isBullet, 0
+  BackToMain:
+    popa
+    ret
+  moveBullet endp
+  
+  erase_bullet proc
+     ;pusha
+     mov al, 01010101b
+     mov cx, 2
+     rep stosb
+     sub di, 82
+     mov cx, 2
+     rep stosb
+     
+     
+     add di, 1FFEh
+     mov cx, 2
+     rep stosb
+     ;popa
+    ret
+erase_bullet endp
+ 
+ end start

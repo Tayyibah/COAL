@@ -1,0 +1,52 @@
+.MODEL SMALL
+.STACK 100H
+.DATA
+        MSG1 DB ' ENTER A HEX DIGIT: ','$'
+        CHAR1 DB ?
+        MSG2 DB ' IN LOWERCASE IT IS: ','$'
+        CHAR2 DB ?
+        MSG3 DB ' IN DECIMAL IT IS: ','$'
+        CHAR3 DB ?
+
+
+.CODE
+MAIN PROC
+        MOV AX,@DATA
+        MOV DS,AX
+
+        MOV AH,9
+        LEA DX, MSG1
+        INT 21H
+
+        MOV AH,1
+	MOV CHAR1 ,AL
+        INT 21H
+	
+	MOV BL,AL
+  
+	MOV AH,9
+        LEA DX, MSG2
+        INT 21H
+
+	MOV AX,2
+	ADD AL,32
+	MOV DL,AL
+	
+	MOV CHAR2 ,DL
+
+	
+	MOV AH,9
+        LEA DX, MSG3
+        INT 21H
+	sUB AL,11H
+	MOV AX,2
+	ADD AL,32
+	MOV DL,AL
+	
+	MOV CHAR3 ,AL
+       
+MOV AH,4CH
+INT 21H
+MAIN ENDP
+        END MAIN
+

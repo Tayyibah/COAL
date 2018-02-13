@@ -1,0 +1,63 @@
+code    segment para 'code' 
+        org 100h 
+assume cs:code,ds:code,ss:code 
+begin: 
+        xor     dx, dx 
+        mov     bl,01h                  ; Col inc 
+        mov     ax,0201h                ; ah = Set Cursor, Al = Row inc 
+Main:   add     dl,bl                   ; Cols inc/dec 
+        jz      Wrap                    ; Left hand side of screen? 
+        cmp     dl,79                   ; Right hand side of screen 
+        jne     NoWrap                  ; Nope 
+Wrap:   neg     bl                      ; Swop direction 
+NoWrap: add     dh,al                   ; Rows inc/dec 
+        jz      RWrap                   ; Top of screen? Zero=y=swop dir 
+        cmp     dh,24                   ; Bottom? 
+        jne     NoRWrap                 ; no 
+RWrap:  neg     al                      ; swop direction 
+NoRWrap: 
+        int     10h                     ; position cursor 
+Delay:  loop    Delay                   ; delay to make visable 
+        push    ax 
+        in      al,60h                  ; read keyboard controller 
+        cmp     al,1                    ; ah = 1 = ESC key pressed 
+        pop     ax 
+        jnz     Main                    ; ah <> 1 - Continue 
+        ret                             ; return to DOS 
+code    ends 
+        end     begin 
+Version 2 
+---------- 
+; code by Rudi Engelbrecht 
+; 
+CODE_SEG        SEGMENT         PARA 'Code' 
+                ASSUME  CS:CODE_SEG 
+                ORG     100h 
+Toets           PROC    NEAR 
+                mov     bx, 0008h 
+                mov     dx, bx 
+STARTLOOP: 
+                mov     di, offset MODIFY+1 
+                cmp     dh, 24 
+
+NEXT: 
+
+TEMPLOOP:       loop    TEMPLOOP 
+MODIFY: 
+                inc     dh 
+                inc     dx 
+                inc     di 
+                mov     ah, 02h 
+                int     10h 
+                cmp     dl, 4Eh 
+                ja      NEXT 
+; Get keyboard character 
+KEYBOARD: 
+                mov     ah, 01h 
+                int     16h 
+                jz      STARTLOOP 
+                ret 
+Toets           ENDP 
+EINDE: 
+CODE_SEG        ENDS 
+                END     Toets 

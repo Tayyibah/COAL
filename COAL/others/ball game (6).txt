@@ -1,0 +1,39 @@
+
+pawan macro
+mov ax,0600h
+mov cx,0000h
+mov dx,184fh
+mov bh,a
+int 10h
+endm
+.model small
+.stack 64
+
+.data
+ctr db 10h
+tik db 'pawan$'
+a db 00h
+.code
+main proc far
+mov ax,@data
+mov ds,ax
+
+a20:
+inc ctr
+mov cx,0fh
+pawa:
+inc a
+loop pawa
+mov ah,10h
+int 16h
+cmp al,0e0h
+je a10
+jmp a20
+a10:
+pawan
+jmp a20
+
+mov ah,4ch
+int 21h
+main endp
+end main

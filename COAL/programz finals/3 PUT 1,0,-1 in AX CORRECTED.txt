@@ -1,0 +1,55 @@
+
+.MODEL SMALL
+.STACK 100H
+.DATA
+	A1 DB '        NUMBER IS POSITIVE $'
+	B1 DB '        NUMBER IS ZERO $'
+	C1 DB '        NUMBER IS NEGATIVE $'
+.CODE
+MAIN PROC    
+
+mov ax,@data
+mov ds, ax
+           ; to take the negative value, we have to take two input one is the -ve
+           ; or +ve character and other is a digit as a character.
+
+
+        mov cx, 0   ; flag for -ve or +ve number
+	MOV AH,1
+	INT 21H
+	cmp al, "-"
+	jne end_if1 
+	mov cx, 1
+end_if1:			
+	mov ah,1
+	int 21h		
+	sub al, 48
+
+	cmp cx, 1
+	jne end_if2
+	neg al	
+end_if2:
+	
+	CMP Al,0
+	JE displayZero
+	JG displayPos
+	JL displayNeg
+displayZero:
+	MOV AH,9
+	LEA DX,B1
+	INT 21H
+	JMP END1_
+displayPos:
+	MOV AH,9
+	LEA DX,A1
+	INT 21H
+	JMP END1_
+displayNeg:
+	MOV AH,9
+	LEA DX,C1
+	INT 21H
+END1_:
+MOV AH , 4CH
+INT 21H
+MAIN ENDP
+	END MAIN
